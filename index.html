@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseGuard AI - Safety-First Healthcare Assistant</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #111827 50%, #030712 100%);
+            --panel-bg: rgba(17, 24, 39, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            
+            --color-safe: #10b981;
+            --color-moderate: #f59e0b;
+            --color-high: #ef4444;
+            --color-info: #3b82f6;
+            --color-accent: #6366f1;
+
+            --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Glowing background blobs */
+        .glowing-blob {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0) 70%);
+            filter: blur(50px);
+            z-index: -1;
+            pointer-events: none;
+            animation: float 25s infinite alternate ease-in-out;
+        }
+        .blob-1 { top: 10%; left: 10%; }
+        .blob-2 { bottom: 10%; right: 10%; background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0) 70%); }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 40px) scale(1.15); }
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            width: 95%;
+            max-width: 900px;
+            height: 85vh;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(10, 15, 30, 0.4);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            font-size: 22px;
+            color: var(--color-accent);
+            animation: pulse-ring 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse-ring {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6)); }
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-safe);
+            box-shadow: 0 0 8px var(--color-safe);
+            animation: glow-green 2s infinite alternate;
+        }
+
+        @keyframes glow-green {
+            from { box-shadow: 0 0 2px var(--color-safe); }
+            to { box-shadow: 0 0 10px var(--color-safe); }
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        /* Scrollbar styling */
+        .chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-box::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+        }
+        .chat-box::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .msg-wrapper {
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-wrapper.user-msg {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .msg-wrapper.bot-msg {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .msg-bubble {
+            padding: 14px 18px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-msg .msg-bubble {
+            background: var(--color-accent);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-msg .msg-bubble {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .bot-msg.risk-safe .msg-bubble { border-left: 4px solid var(--color-safe); }
+        .bot-msg.risk-moderate .msg-bubble { border-left: 4px solid var(--color-moderate); }
+        .bot-msg.risk-high .msg-bubble { border-left: 4px solid var(--color-high); }
+
+        .msg-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            margin-left: 4px;
+            margin-right: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .emergency-card {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            animation: pulse-red-border 2.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulse-red-border {
+            from { border-color: rgba(239, 68, 68, 0.25); }
+            to { border-color: rgba(239, 68, 68, 0.55); box-shadow: 0 0 10px rgba(239, 68, 68, 0.15); }
+        }
+
+        .emergency-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--color-high);
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .emergency-btn {
+            background: var(--color-high);
+            color: #ffffff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .emergency-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+        }
+
+        /* Input area */
+        .input-area {
+            padding: 20px 24px;
+            background: rgba(10, 15, 30, 0.4);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .chat-input:focus {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(99, 102, 241, 0.35);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .send-btn {
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #4f46e5;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .send-btn:disabled {
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.2);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Loading animation dots */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            max-width: 100px;
+            align-self: flex-start;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.3); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Welcome intro */
+        .intro-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 0 40px;
+        }
+
+        .intro-icon {
+            font-size: 42px;
+            color: var(--color-accent);
+            margin-bottom: 20px;
+            background: rgba(99, 102, 241, 0.08);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            animation: breathing 4s infinite ease-in-out;
+        }
+
+        @keyframes breathing {
+            0%, 100% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.1); }
+            50% { box-shadow: 0 0 25px rgba(99, 102, 241, 0.3); border-color: rgba(99, 102, 241, 0.4); }
+        }
+
+        .intro-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .intro-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            max-width: 440px;
+            line-height: 1.6;
+        }
+
+        .intro-rules {
+            margin-top: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .rule-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .rule-card i {
+            color: var(--color-accent);
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="glowing-blob blob-1"></div>
+    <div class="glowing-blob blob-2"></div>
+    <div id="root"></div>
+
+    <script type="text/babel">
+
+        function RenderMessage({ msg }) {
+            const isBot = msg.type === "bot";
+            const isEmergency = msg.action === "EMERGENCY_ADVICE" || msg.action === "SELF_HARM_CRISIS";
+
+            // Map action levels to badge metadata
+            let badgeIcon = "fa-solid fa-shield-halved";
+            let badgeText = "Safety Check Verified";
+            if (msg.action === "EMERGENCY_ADVICE") {
+                badgeIcon = "fa-solid fa-circle-exclamation";
+                badgeText = "Emergency Guidance";
+            } else if (msg.action === "PRIVACY_REFUSAL") {
+                badgeIcon = "fa-solid fa-lock";
+                badgeText = "Privacy Refusal";
+            } else if (msg.action === "CAUTION_ADVICE") {
+                badgeIcon = "fa-solid fa-triangle-exclamation";
+                badgeText = "General Support with Cautions";
+            }
+
+            return (
+                <div className={`msg-wrapper ${isBot ? 'bot-msg' : 'user-msg'} ${msg.risk ? `risk-${msg.risk}` : ''}`}>
+                    <div className="msg-bubble">
+                        {msg.text}
+                        {isBot && isEmergency && (
+                            <div className="emergency-card">
+                                <div className="emergency-header">
+                                    <i className="fa-solid fa-triangle-exclamation"></i>
+                                    Critical Action Required
+                                </div>
+                                <p style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#9ca3af' }}>
+                                    Please call emergency support lines immediately.
+                                </p>
+                                <a href="tel:108" className="emergency-btn">
+                                    <i className="fa-solid fa-phone"></i>
+                                    Call Services Now (108 / 112)
+                                </a>
+                            </div>
+                        )}
+                    </div>
+                    <div className="msg-meta">
+                        {isBot ? (
+                            <React.Fragment>
+                                <i className={badgeIcon} style={{ fontSize: '10px' }}></i>
+                                <span>{badgeText}</span>
+                            </React.Fragment>
+                        ) : 'Patient'}
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [query, setQuery] = React.useState("");
+            const [messages, setMessages] = React.useState([]);
+            const [loading, setLoading] = React.useState(false);
+            const chatEndRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if (chatEndRef.current) {
+                    chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, [messages, loading]);
+
+            const sendQuery = async () => {
+                if (!query.trim() || loading) return;
+
+                const userText = query;
+                setQuery("");
+                setLoading(true);
+
+                // Add user message
+                setMessages(prev => [
+                    ...prev,
+                    { type: "user", text: userText }
+                ]);
+
+                const userHistory = messages
+                    .filter(msg => msg.type === "user")
+                    .map(msg => msg.text);
+
+                try {
+                    const res = await fetch("http://127.0.0.1:5000/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ query: userText, history: userHistory })
+                    });
+
+                    if (!res.ok) {
+                        throw new Error("HTTP failure");
+                    }
+
+                    const data = await res.json();
+
+                    if (data.error) {
+                        setMessages(prev => [
+                            ...prev,
+                            { 
+                                type: "bot", 
+                                text: `Safety Validation Block: ${data.error}`, 
+                                risk: "high",
+                                action: "PRIVACY_REFUSAL"
+                            }
+                        ]);
+                    } else {
+                        setMessages(prev => [
+                            ...prev,
+                            { 
+                                type: "bot", 
+                                text: data.response, 
+                                risk: data.decision.risk.toLowerCase(),
+                                action: data.decision.action 
+                            }
+                        ]);
+                    }
+                } catch (err) {
+                    setMessages(prev => [
+                        ...prev,
+                        { 
+                            type: "bot", 
+                            text: "Connection refused: Ensure that Flask backend server is running locally on port 5000.", 
+                            risk: "high",
+                            action: "PRIVACY_REFUSAL"
+                        }
+                    ]);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="app-container">
+                    <header className="header">
+                        <div className="logo-container">
+                            <i className="fa-solid fa-heart-pulse logo-icon"></i>
+                            <span className="logo-text">PulseGuard AI</span>
+                        </div>
+                        <div className="status-badge">
+                            <div className="status-dot"></div>
+                            <span>Safety Firewall Active</span>
+                        </div>
+                    </header>
+
+                    <div className="chat-box">
+                        {messages.length === 0 ? (
+                            <div className="intro-container">
+                                <div className="intro-icon">
+                                    <i className="fa-solid fa-shield-medical"></i>
+                                </div>
+                                <h2 className="intro-title">PulseGuard Triage System</h2>
+                                <p className="intro-desc">
+                                    A rule-first clinical firewall. Unsafe queries are routed to deterministic guidelines. Safe guidance queries are verified by Ollama models.
+                                </p>
+                                <div className="intro-rules">
+                                    <div className="rule-card">
+                                        <i className="fa-solid fa-circle-check"></i>
+                                        <span>PHI Guard (redacts phone/emails)</span>
+                                    </div>
+                                    <div className="rule-card">
+                                        <i className="fa-solid fa-circle-check"></i>
+                                        <span>Crisis Refusals (no hallucination)</span>
+                                    </div>
+                                    <div className="rule-card">
+                                        <i className="fa-solid fa-circle-check"></i>
+                                        <span>Clinical Sufficiency Gates</span>
+                                    </div>
+                                    <div className="rule-card">
+                                        <i className="fa-solid fa-circle-check"></i>
+                                        <span>Evidence grounded responses</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            messages.map((msg, i) => <RenderMessage key={i} msg={msg} />)
+                        )}
+                        {loading && (
+                            <div className="typing-indicator">
+                                <div className="typing-dot"></div>
+                                <div className="typing-dot"></div>
+                                <div className="typing-dot"></div>
+                            </div>
+                        )}
+                        <div ref={chatEndRef} />
+                    </div>
+
+                    <div className="input-area">
+                        <input
+                            className="chat-input"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Describe your symptoms (e.g. 6-month-old with fever for 2 days)..."
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    sendQuery();
+                                }
+                            }}
+                            disabled={loading}
+                        />
+                        <button 
+                            className="send-btn" 
+                            onClick={sendQuery}
+                            disabled={!query.trim() || loading}
+                        >
+                            <i className="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+    </script>
+</body>
+</html>
