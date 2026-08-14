@@ -120,11 +120,26 @@ def parse_markdown_guideline(file_path: str):
     sections = re.split(r"\n\n+", content)
     for sec in sections:
         sec = sec.strip()
-        # Skip headers and metadata lines in chunks
-        if not sec or sec.startswith("#") or sec.startswith("**Source:") or sec.startswith("**URL:"):
+        if not sec:
+            continue
+        # If section starts with a header line, strip the header line and keep the rest
+        if sec.startswith("#"):
+            # Remove all leading header lines (lines starting with #)
+            body_lines = [
+                line for line in sec.splitlines()
+                if not line.strip().startswith("#")
+                and not line.strip().startswith("**Source:")
+                and not line.strip().startswith("**URL:")
+            ]
+            body = "\n".join(body_lines).strip()
+            if body:
+                chunks.append(body)
+            continue
+        # Skip standalone metadata lines
+        if sec.startswith("**Source:") or sec.startswith("**URL:"):
             continue
         chunks.append(sec)
-        
+
     return [{
         "source": source,
         "title": title,
@@ -253,7 +268,11 @@ def retrieve_evidence(query: str, max_results: int = 3) -> Dict[str, object]:
 
     scored = list(entry_scores.values())
     scored.sort(key=lambda item: item["score"], reverse=True)
-    evidence = [item["entry"] for item in scored[:max_results]]
+    # Strip internal 'keywords' field — only expose the public-facing fields
+    evidence = [
+        {k: v for k, v in item["entry"].items() if k != "keywords"}
+        for item in scored[:max_results]
+    ]
 
     return {
         "evidence": evidence,

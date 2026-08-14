@@ -14,9 +14,16 @@ CORS(app)
 @app.route("/chat", methods=["POST"])
 def chat():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
+        if data is None:
+            return jsonify({"error": "Request body must be valid JSON with Content-Type: application/json."}), 400
+
         user_query = data.get("query")
         history = data.get("history", [])
+
+        # Validate that query is present and is a string
+        if user_query is None or not isinstance(user_query, str):
+            return jsonify({"error": "Field 'query' is required and must be a non-null string."}), 400
 
         if history:
             query_or_history = history + [user_query]
@@ -31,8 +38,10 @@ def chat():
             "response": response
         })
 
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
